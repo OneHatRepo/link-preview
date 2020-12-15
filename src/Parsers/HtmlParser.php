@@ -11,6 +11,8 @@ use Dusterio\LinkPreview\Models\Link;
 use Dusterio\LinkPreview\Readers\HttpReader;
 use Dusterio\LinkPreview\Models\HtmlPreview;
 use Symfony\Component\DomCrawler\Crawler;
+use GuzzleHttp\Psr7\Uri;
+use GuzzleHttp\Psr7\UriResolver;
 
 /**
  * Class HtmlParser
@@ -27,6 +29,13 @@ class HtmlParser extends BaseParser implements ParserInterface
             ['selector' => 'meta[property="twitter:image"]', 'attribute' => 'content'],
             ['selector' => 'meta[property="og:image"]', 'attribute' => 'content'],
             ['selector' => 'meta[itemprop="image"]', 'attribute' => 'content'],
+        ],
+
+        'name' => [
+            ['selector' => 'meta[property="og:site_name"]', 'attribute' => 'content'],
+            ['selector' => 'meta[itemprop="name"]', 'attribute' => 'content'],
+            ['selector' => 'meta[property="twitter:name"]', 'attribute' => 'content'],
+            ['selector' => 'meta[property="og:name"]', 'attribute' => 'content']
         ],
 
         'title' => [
@@ -138,6 +147,7 @@ class HtmlParser extends BaseParser implements ParserInterface
     protected function parseHtml(LinkInterface $link)
     {
         $images = [];
+        $logos = [];
 
         try {
             $parser = new Crawler();
@@ -158,7 +168,9 @@ class HtmlParser extends BaseParser implements ParserInterface
                 }
 
                 // Default is empty string
-                if (!isset(${$tag})) ${$tag} = '';
+                if (!isset(${$tag})) {
+                    ${$tag} = '';
+                }
             }
 
             // Parse all images on this page
@@ -172,13 +184,84 @@ class HtmlParser extends BaseParser implements ParserInterface
 
                 $images[] = $image->getAttribute('src');
             }
+
+            foreach($parser->filter('link[rel="apple-touch-icon"]') as $image) {
+                if (!$image->hasAttribute('href')) continue;
+                if (filter_var($image->getAttribute('href'), FILTER_VALIDATE_URL) === false) {
+                preg_match('/^\/\/\/*/', $image->getAttribute('href'), $output_array);
+                if (count($output_array)) {
+                    $image->setAttribute('href', preg_replace('/^\/\/\/*/', 'https:$0', $image->getAttribute('href')));
+                }else {
+                    $image->setAttribute('href', $link->getEffectiveUrl()->getScheme()."://".$link->getEffectiveUrl()->getHost()."/".$image->getAttribute('href'));
+                }
+                }
+
+                // This is not bulletproof, actual image maybe bigger than tags
+                if ($image->hasAttribute('width') && $image->getAttribute('width') < $this->imageMinimumWidth) continue;
+                if ($image->hasAttribute('height') && $image->getAttribute('height') < $this->imageMinimumHeight) continue;
+
+                $logos[] = $image->getAttribute('href');
+            }
+
+            foreach($parser->filter('link[rel="shortcut icon"]') as $image) {
+                if (!$image->hasAttribute('href')) continue;
+                if (filter_var($image->getAttribute('href'), FILTER_VALIDATE_URL) === false) {
+                preg_match('/^\/\/\/*/', $image->getAttribute('href'), $output_array);
+                if (count($output_array)) {
+                    $image->setAttribute('href', preg_replace('/^\/\/\/*/', 'https:$0', $image->getAttribute('href')));
+                }else {
+                    $image->setAttribute('href', $link->getEffectiveUrl()->getScheme()."://".$link->getEffectiveUrl()->getHost()."/".$image->getAttribute('href'));
+                }
+                }
+
+                // This is not bulletproof, actual image maybe bigger than tags
+                if ($image->hasAttribute('width') && $image->getAttribute('width') < $this->imageMinimumWidth) continue;
+                if ($image->hasAttribute('height') && $image->getAttribute('height') < $this->imageMinimumHeight) continue;
+
+                $logos[] = $image->getAttribute('href');
+            }
+
+            foreach($parser->filter('link[rel="icon"]') as $image) {
+                if (!$image->hasAttribute('href')) continue;
+                if (filter_var($image->getAttribute('href'), FILTER_VALIDATE_URL) === false) {
+                preg_match('/^\/\/\/*/', $image->getAttribute('href'), $output_array);
+                if (count($output_array)) {
+                    $image->setAttribute('href', preg_replace('/^\/\/\/*/', 'https:$0', $image->getAttribute('href')));
+                }else {
+                    $image->setAttribute('href', $link->getEffectiveUrl()->getScheme()."://".$link->getEffectiveUrl()->getHost()."/".$image->getAttribute('href'));
+                }
+                }
+
+                // This is not bulletproof, actual image maybe bigger than tags
+                if ($image->hasAttribute('width') && $image->getAttribute('width') < $this->imageMinimumWidth) continue;
+                if ($image->hasAttribute('height') && $image->getAttribute('height') < $this->imageMinimumHeight) continue;
+
+                $logos[] = $image->getAttribute('href');
+            }
         } catch (\InvalidArgumentException $e) {
             // Ignore exceptions
         }
 
         $images = array_unique($images);
+        $logos = array_unique($logos);
 
-        if (!isset($cover) && count($images)) $cover = $images[0];
+        if (empty($cover) && count($images)) {
+            $cover = $images[0];
+        } else {
+            if (filter_var($cover, FILTER_VALIDATE_URL) === false && $cover != '') {
+                preg_match('/^\/\/\/*/', $cover, $output_array);
+                if (count($output_array)) {
+                    $cover = preg_replace('/^\/\/\/*/', 'https:$0', $cover);
+                } else {
+                    $cover = $link->getEffectiveUrl()->getScheme()."://".$link->getEffectiveUrl()->getHost()."/".$cover;
+                }
+            }
+        }
+        
+    $coverUri = new Uri($cover);
+        if (!Uri::isAbsolute($coverUri)) {
+            $cover = (string) UriResolver::resolve($link->getEffectiveUrl(), $coverUri);
+        }
 
         return compact('cover', 'title', 'description', 'images', 'video', 'videoType');
     }
