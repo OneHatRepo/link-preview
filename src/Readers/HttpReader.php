@@ -42,7 +42,7 @@ class HttpReader implements ReaderInterface
             'cookies' => $this->jar,
             'connect_timeout' => 5,
             'headers' => [
-                'User-Agent' => 'dusterio/link-preview v1.2'
+                'User-Agent' => 'Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)'
             ]
         ];
     }
