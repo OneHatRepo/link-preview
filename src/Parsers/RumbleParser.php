@@ -62,7 +62,7 @@ class RumbleParser extends BaseParser implements ParserInterface {
 		$this->getPreview()
 			->setId($id)
 			->setEmbed(
-				'<iframe class="rumble" width="640" height="360" src="https://rumble.com/embed/' . $id . '/?pub=7olpn" frameborder="0" allowfullscreen></iframe>'
+				'<iframe class="rumble" width="100%" height="100%" src="https://rumble.com/embed/' . $id . '/?pub=7olpn" frameborder="0" allowfullscreen></iframe>'
 			);
 
 		return $this;
