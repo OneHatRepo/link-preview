@@ -17,7 +17,7 @@ class VimeoParser extends BaseParser implements ParserInterface
     /**
      * Url validation pattern based on http://stackoverflow.com/questions/13286785/get-video-id-from-vimeo-url/22071143#comment48088417_22071143
      */
-    const PATTERN = '/^.*(?:vimeo.com)\\/(?:channels\\/|groups\\/[^\\/]*\\/videos\\/|album\\/\\d+\\/video\\/|video\\/|)(\\d+)(?:$|\\/|\\?)/';
+    const PATTERN = '/^.*(?:vimeo.com)\\/(?:channels\\/|channels\\/[^\\/]*\\/|groups\\/[^\\/]*\\/videos\\/|album\\/\\d+\\/video\\/|video\\/|)(\\d+)(?:$|\\/|\\?)/';
 
     /**
      * @param ReaderInterface $reader
