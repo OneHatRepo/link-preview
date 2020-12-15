@@ -44,11 +44,25 @@ class RumbleParser extends BaseParser implements ParserInterface {
 	 */
 	public function parseLink(LinkInterface $link)
 	{
-		preg_match(static::PATTERN, $link->getUrl(), $matches);
+		$link = $this->readLink($link);
+		$html = $link->getContent();
+		$regex = '/embedUrl":"([^"]+)"/'; // matches 'embedUrl":"https://rumble.com/embed/v97gkx/"'
+		preg_match($regex, $html, $matches);
+		if (!isset($matches[1]) || empty($matches[1])) {
+			return;
+		}
+		$html = $matches[1];
+		$regex = '/^.*(rumble.com)\/embed\/([^\/]+)/'; // matches 'https://rumble.com/embed/v97gkx/'
+		preg_match($regex, $html, $matches);
+		if (!isset($matches[2]) || empty($matches[2])) {
+			return;
+		}
+		$id = $matches[2];
+		
 		$this->getPreview()
-			->setId($matches[1])
+			->setId($id)
 			->setEmbed(
-				'<iframe class="rumble" width="640" height="360" src="https://rumble.com/embed/'.$this->getPreview()->getId().'/?pub=7olpn" frameborder="0" allowfullscreen></iframe>'
+				'<iframe class="rumble" width="640" height="360" src="https://rumble.com/embed/' . $id . '/?pub=7olpn" frameborder="0" allowfullscreen></iframe>'
 			);
 
 		return $this;
