@@ -55,7 +55,7 @@ class VimeoParser extends BaseParser implements ParserInterface
         $this->getPreview()
             ->setId($matches[1])
             ->setEmbed(
-                '<iframe id="viplayer" width="640" height="390" src="//player.vimeo.com/video/'.$this->getPreview()->getId().'"" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe>'
+                '<iframe title="vimeo-player" src="https://player.vimeo.com/video/'.$this->getPreview()->getId().'" width="640" height="360" frameborder="0" allowfullscreen></iframe>'
             );
 
         return $this;
