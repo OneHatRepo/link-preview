@@ -11,7 +11,7 @@ use Dusterio\LinkPreview\Readers\HttpReader;
 
 class RumbleParser extends BaseParser implements ParserInterface {
 	
-	const PATTERN = '/^.*(?:rumble.com)\\/([^\-]+)\-([\w]+)(?:$|\\/|\\?)/';
+	const PATTERN = '/^.*(?:rumble.com)\\/([^\-]+)\-(.+)(?:$|\\/|\\?)/';
 
 	/**
 	 * @param ReaderInterface $reader
@@ -45,7 +45,6 @@ class RumbleParser extends BaseParser implements ParserInterface {
 	public function parseLink(LinkInterface $link)
 	{
 		preg_match(static::PATTERN, $link->getUrl(), $matches);
-
 		$this->getPreview()
 			->setId($matches[1])
 			->setEmbed(
